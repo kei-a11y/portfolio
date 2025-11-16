@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マインスイーパー</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'MS UI Gothic', sans-serif;
+            background: #008080;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .game-container {
+            background: #c0c0c0;
+            border: 3px outset #fff;
+            padding: 10px;
+            box-shadow: 5px 5px 0 rgba(0,0,0,0.3);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #c0c0c0;
+            border: 2px inset #808080;
+            margin-bottom: 10px;
+        }
+        .counter {
+            background: #000;
+            color: #f00;
+            font-size: 32px;
+            font-weight: bold;
+            padding: 5px 10px;
+            font-family: 'Courier New', monospace;
+            border: 2px inset #808080;
+            min-width: 80px;
+            text-align: center;
+        }
+        .reset-btn {
+            width: 50px;
+            height: 50px;
+            font-size: 32px;
+            background: #c0c0c0;
+            border: 3px outset #fff;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .reset-btn:active {
+            border-style: inset;
+        }
+        .board {
+            display: inline-grid;
+            gap: 0;
+            background: #808080;
+            border: 3px inset #808080;
+            padding: 5px;
+        }
+        .cell {
+            width: 25px;
+            height: 25px;
+            background: #c0c0c0;
+            border: 2px outset #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            user-select: none;
+        }
+        .cell.revealed {
+            border: 1px solid #808080;
+            background: #bfbfbf;
+        }
+        .cell.mine {
+            background: #f00;
+        }
+        .cell.flagged::before {
+            content: '🚩';
+            font-size: 14px;
+        }
+        .cell.num-1 { color: #0000ff; }
+        .cell.num-2 { color: #008000; }
+        .cell.num-3 { color: #ff0000; }
+        .cell.num-4 { color: #000080; }
+        .cell.num-5 { color: #800000; }
+        .cell.num-6 { color: #008080; }
+        .cell.num-7 { color: #000000; }
+        .cell.num-8 { color: #808080; }
+        .back-btn {
+            margin-top: 20px;
+            padding: 10px 30px;
+            font-size: 16px;
+            background: #c0c0c0;
+            border: 3px outset #fff;
+            cursor: pointer;
+        }
+        .back-btn:active {
+            border-style: inset;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #c0c0c0;
+            border: 3px outset #fff;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 5px 5px 0 rgba(0,0,0,0.3);
+        }
+        .modal-content h2 {
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        .modal-content p {
+            margin: 10px 0;
+            font-size: 18px;
+        }
+        .modal-btn {
+            margin: 10px 5px;
+            padding: 10px 30px;
+            font-size: 16px;
+            background: #c0c0c0;
+            border: 3px outset #fff;
+            cursor: pointer;
+        }
+        .modal-btn:active {
+            border-style: inset;
+        }
+        .new-record {
+            color: #ff0000;
+            font-weight: bold;
+            font-size: 20px;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 50%, 100% { opacity: 1; }
+            25%, 75% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <div class="counter" id="mineCounter">000</div>
+            <button class="reset-btn" onclick="resetGame()">🙂</button>
+            <div class="counter" id="timeCounter">000</div>
+        </div>
+        <div class="board" id="board"></div>
+    </div>
+    
+    <button class="back-btn" onclick="location.href='{% url 'mine:index' %}'">← 難易度選択に戻る</button>
+
+    <div class="modal" id="winModal">
+        <div class="modal-content">
+            <h2>🎉 クリア！ 🎉</h2>
+            <p>タイム: <span id="finalTime"></span>秒</p>
+            <p id="recordMessage"></p>
+            <button class="modal-btn" onclick="resetGame(); closeModal()">もう一度</button>
+            <button class="modal-btn" onclick="location.href='{% url 'mine:index' %}'">難易度選択へ</button>
+        </div>
+    </div>
+
+    <div class="modal" id="loseModal">
+        <div class="modal-content">
+            <h2>💥 ゲームオーバー 💥</h2>
+            <button class="modal-btn" onclick="resetGame(); closeModal()">もう一度</button>
+            <button class="modal-btn" onclick="location.href='{% url 'mine:index' %}'">難易度選択へ</button>
+        </div>
+    </div>
+
+    <script>
+        const ROWS = {{ rows }};
+        const COLS = {{ cols }};
+        const MINES = {{ mines }};
+        const DIFFICULTY = '{{ difficulty }}';
+        const BEST_TIME = {{ best_time|default:"null" }};
+
+        let board = [];
+        let revealed = [];
+        let flagged = [];
+        let gameOver = false;
+        let gameStarted = false;
+        let firstClick = true;
+        let timeElapsed = 0;
+        let timerInterval = null;
+        let minesLeft = MINES;
+
+        function initGame() {
+            board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+            revealed = Array(ROWS).fill().map(() => Array(COLS).fill(false));
+            flagged = Array(ROWS).fill().map(() => Array(COLS).fill(false));
+            gameOver = false;
+            gameStarted = false;
+            firstClick = true;
+            timeElapsed = 0;
+            minesLeft = MINES;
+            
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            
+            updateMineCounter();
+            updateTimeCounter();
+            renderBoard();
+        }
+
+        function placeMines(excludeRow, excludeCol) {
+            let minesPlaced = 0;
+            while (minesPlaced < MINES) {
+                const row = Math.floor(Math.random() * ROWS);
+                const col = Math.floor(Math.random() * COLS);
+                
+                // 最初のクリック位置とその周辺を除外
+                const isNearFirstClick = Math.abs(row - excludeRow) <= 1 && Math.abs(col - excludeCol) <= 1;
+                
+                if (board[row][col] !== -1 && !isNearFirstClick) {
+                    board[row][col] = -1;
+                    minesPlaced++;
+                    
+                    // 周囲の数字を更新
+                    for (let i = -1; i <= 1; i++) {
+                        for (let j = -1; j <= 1; j++) {
+                            const newRow = row + i;
+                            const newCol = col + j;
+                            if (newRow >= 0 && newRow < ROWS && newCol >= 0 && newCol < COLS && board[newRow][newCol] !== -1) {
+                                board[newRow][newCol]++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function startTimer() {
+            if (!gameStarted) {
+                gameStarted = true;
+                timerInterval = setInterval(() => {
+                    timeElapsed++;
+                    updateTimeCounter();
+                }, 1000);
+            }
+        }
+
+        function updateMineCounter() {
+            document.getElementById('mineCounter').textContent = String(minesLeft).padStart(3, '0');
+        }
+
+        function updateTimeCounter() {
+            document.getElementById('timeCounter').textContent = String(Math.min(timeElapsed, 999)).padStart(3, '0');
+        }
+
+        function renderBoard() {
+            const boardElement = document.getElementById('board');
+            boardElement.innerHTML = '';
+            boardElement.style.gridTemplateColumns = `repeat(${COLS}, 25px)`;
+            boardElement.style.gridTemplateRows = `repeat(${ROWS}, 25px)`;
+
+            for (let row = 0; row < ROWS; row++) {
+                for (let col = 0; col < COLS; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+
+                    cell.addEventListener('click', () => handleClick(row, col));
+                    cell.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        handleRightClick(row, col);
+                    });
+
+                    if (revealed[row][col]) {
+                        cell.classList.add('revealed');
+                        if (board[row][col] === -1) {
+                            cell.textContent = '💣';
+                            if (gameOver) cell.classList.add('mine');
+                        } else if (board[row][col] > 0) {
+                            cell.textContent = board[row][col];
+                            cell.classList.add(`num-${board[row][col]}`);
+                        }
+                    } else if (flagged[row][col]) {
+                        cell.classList.add('flagged');
+                    }
+
+                    boardElement.appendChild(cell);
+                }
+            }
+        }
+
+        function handleClick(row, col) {
+            if (gameOver || revealed[row][col] || flagged[row][col]) return;
+
+            if (firstClick) {
+                placeMines(row, col);
+                firstClick = false;
+                startTimer();
+            }
+
+            if (board[row][col] === -1) {
+                // 地雷を踏んだ
+                gameOver = true;
+                revealAllMines();
+                clearInterval(timerInterval);
+                document.querySelector('.reset-btn').textContent = '😵';
+                setTimeout(() => {
+                    document.getElementById('loseModal').style.display = 'flex';
+                }, 500);
+            } else {
+                revealCell(row, col);
+                checkWin();
+            }
+        }
+
+        function handleRightClick(row, col) {
+            if (gameOver || revealed[row][col]) return;
+
+            if (!gameStarted && firstClick) {
+                startTimer();
+            }
+
+            flagged[row][col] = !flagged[row][col];
+            minesLeft += flagged[row][col] ? -1 : 1;
+            updateMineCounter();
+            renderBoard();
+        }
+
+        function revealCell(row, col) {
+            if (row < 0 || row >= ROWS || col < 0 || col >= COLS || revealed[row][col]) return;
+
+            revealed[row][col] = true;
+
+            if (board[row][col] === 0) {
+                // 周囲の0のセルも開く
+                for (let i = -1; i <= 1; i++) {
+                    for (let j = -1; j <= 1; j++) {
+                        revealCell(row + i, col + j);
+                    }
+                }
+            }
+
+            renderBoard();
+        }
+
+        function revealAllMines() {
+            for (let row = 0; row < ROWS; row++) {
+                for (let col = 0; col < COLS; col++) {
+                    if (board[row][col] === -1) {
+                        revealed[row][col] = true;
+                    }
+                }
+            }
+            renderBoard();
+        }
+
+        function checkWin() {
+            let revealedCount = 0;
+            for (let row = 0; row < ROWS; row++) {
+                for (let col = 0; col < COLS; col++) {
+                    if (revealed[row][col]) revealedCount++;
+                }
+            }
+
+            if (revealedCount === ROWS * COLS - MINES) {
+                gameOver = true;
+                clearInterval(timerInterval);
+                document.querySelector('.reset-btn').textContent = '😎';
+                
+                // タイムを保存
+                saveTime(timeElapsed);
+            }
+        }
+
+        async function saveTime(seconds) {
+            try {
+                const response = await fetch('{% url "mine:save_time" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        difficulty: DIFFICULTY,
+                        time_seconds: seconds
+                    })
+                });
+
+                const data = await response.json();
+                
+                document.getElementById('finalTime').textContent = seconds;
+                
+                const recordMessage = document.getElementById('recordMessage');
+                if (data.is_new_record) {
+                    recordMessage.innerHTML = '<p class="new-record">🏆 新記録！ 🏆</p>';
+                } else if (BEST_TIME) {
+                    recordMessage.innerHTML = `<p>ベストタイム: ${BEST_TIME}秒</p>`;
+                } else {
+                    recordMessage.innerHTML = '';
+                }
+                
+                setTimeout(() => {
+                    document.getElementById('winModal').style.display = 'flex';
+                }, 500);
+            } catch (error) {
+                console.error('Error saving time:', error);
+                setTimeout(() => {
+                    document.getElementById('winModal').style.display = 'flex';
+                }, 500);
+            }
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function resetGame() {
+            document.querySelector('.reset-btn').textContent = '🙂';
+            initGame();
+        }
+
+        function closeModal() {
+            document.getElementById('winModal').style.display = 'none';
+            document.getElementById('loseModal').style.display = 'none';
+        }
+
+        // ゲーム初期化
+        initGame();
+    </script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マインスイーパー - 難易度選択</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'MS UI Gothic', sans-serif;
+            background: #008080;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background: #c0c0c0;
+            border: 3px outset #fff;
+            padding: 30px;
+            box-shadow: 5px 5px 0 rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #000;
+            font-size: 32px;
+            text-shadow: 2px 2px 0 #808080;
+        }
+        .difficulty-btn {
+            width: 100%;
+            padding: 20px;
+            margin: 15px 0;
+            font-size: 18px;
+            font-weight: bold;
+            background: #c0c0c0;
+            border: 3px outset #fff;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .difficulty-btn:hover {
+            background: #d0d0d0;
+        }
+        .difficulty-btn:active {
+            border-style: inset;
+        }
+        .best-time {
+            font-size: 14px;
+            color: #000080;
+            margin-top: 5px;
+            font-weight: normal;
+        }
+        .info {
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 5px;
+        }
+        .back-home-btn {
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 16px;
+            background: #808080;
+            color: white;
+            border: 3px outset #a0a0a0;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .back-home-btn:hover {
+            background: #909090;
+        }
+        .back-home-btn:active {
+            border-style: inset;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💣 マインスイーパー</h1>
+        
+        <button class="difficulty-btn" onclick="location.href='{% url 'mine:game' 'easy' %}'">
+            <div>🟢 初級</div>
+            <div class="info">9 × 9 マス / 地雷 10個</div>
+            {% if best_times.easy %}
+            <div class="best-time">ベストタイム: {{ best_times.easy }}秒</div>
+            {% endif %}
+        </button>
+        
+        <button class="difficulty-btn" onclick="location.href='{% url 'mine:game' 'medium' %}'">
+            <div>🟡 中級</div>
+            <div class="info">16 × 16 マス / 地雷 40個</div>
+            {% if best_times.medium %}
+            <div class="best-time">ベストタイム: {{ best_times.medium }}秒</div>
+            {% endif %}
+        </button>
+        
+        <button class="difficulty-btn" onclick="location.href='{% url 'mine:game' 'hard' %}'">
+            <div>🔴 上級</div>
+            <div class="info">16 × 30 マス / 地雷 99個</div>
+            {% if best_times.hard %}
+            <div class="best-time">ベストタイム: {{ best_times.hard }}秒</div>
+            {% endif %}
+        </button>
+        
+        <button class="back-home-btn" onclick="location.href='/game'">
+            ← ゲーム選択に戻る
+        </button>
+    </div>
+</body>
+</html>

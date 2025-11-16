@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ゲーム選択</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'MS UI Gothic', 'Hiragino Sans', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 50px;
+            font-size: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        .game-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 40px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            text-decoration: none;
+            color: white;
+            display: block;
+        }
+        .game-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+        .game-card:active {
+            transform: translateY(-5px);
+        }
+        .game-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3));
+        }
+        .game-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .game-description {
+            font-size: 16px;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        .poker-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .mine-card {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .scro-card {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+            }
+            h1 {
+                font-size: 36px;
+                margin-bottom: 30px;
+            }
+            .games-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 ゲーム選択</h1>
+        <div class="games-grid">
+            <a href="/poker/" class="game-card poker-card">
+                <div class="game-icon">🃏</div>
+                <div class="game-title">ポーカー</div>
+                <div class="game-description">
+                    シンプルなポーカーゲーム
+                </div>
+            </a>
+            
+            <a href="/mine/" class="game-card mine-card">
+                <div class="game-icon">💣</div>
+                <div class="game-title">マインスイーパー</div>
+                <div class="game-description">
+                    クラシックなパズルゲーム
+                </div>
+            </a>
+            
+            <a href="/scro/" class="game-card scro-card">
+                <div class="game-icon">🏃</div>
+                <div class="game-title">横スクロールアクション</div>
+                <div class="game-description">
+                    敵を避けながらゴールを目指す
+                </div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
